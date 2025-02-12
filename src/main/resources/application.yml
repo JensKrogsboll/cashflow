@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: expenses
+  datasource:
+    url: jdbc:postgresql://localhost:5432/expenses_db
+    username: dave
+    password: secret
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
