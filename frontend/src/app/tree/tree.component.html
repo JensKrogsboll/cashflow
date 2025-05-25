@@ -1,27 +1,35 @@
-<h1>Tree</h1>
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-    <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-        <button mat-icon-button disabled></button>
-        {{node.item}}
-    </mat-tree-node>
-    <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding matTreeNodeToggle
-                   [cdkTreeNodeTypeaheadLabel]="node.item">
-        <button mat-icon-button
-                [attr.aria-label]="'Toggle ' + node.item" matTreeNodeToggle>
-            <mat-icon class="mat-icon-rtl-mirror">
-                {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-            </mat-icon>
-        </button>
-        {{node.item}}
-        @if (node.isLoading()) {
-            <mat-progress-bar
-                    mode="indeterminate"
-                    class="tree-progress-bar"></mat-progress-bar>
-        }
-    </mat-tree-node>
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+    <button mat-icon-button disabled></button>
+    {{ node.item }}
+  </mat-tree-node>
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding matTreeNodeToggle
+                 [cdkTreeNodeTypeaheadLabel]="node.item">
+    <button mat-icon-button
+            [attr.aria-label]="'Toggle ' + node.item" matTreeNodeToggle>
+      <mat-icon class="mat-icon-rtl-mirror">
+        {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+      </mat-icon>
+    </button>
+    {{ node.item }}
+    <span *ngIf="!node.editingLabel" class="node-label" (click)="editLabel(node)">({{ node.label }})</span>
+    <mat-form-field *ngIf="node.editingLabel" class="label-editor" appearance="outline">
+      <input
+        matInput
+        type="text"
+        [formControl]="node.labelControl"
+        [matAutocomplete]="auto"
+      />
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onLabelSelected(node, $event)">
+        <mat-option *ngFor="let option of labelOptions" [value]="option">
+          {{ option }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+    @if (node.isLoading()) {
+      <mat-progress-bar
+        mode="indeterminate"
+        class="tree-progress-bar"></mat-progress-bar>
+    }
+  </mat-tree-node>
 </mat-tree>
-
-
-<!-- Copyright 2025 Google LLC. All Rights Reserved.
-    Use of this source code is governed by an MIT-style license that
-    can be found in the LICENSE file at https://angular.io/license -->

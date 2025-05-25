@@ -1,5 +1,6 @@
 package dk.jk.expenses.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ public class Label {
 
     private String name;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "label")
     private List<TreeNode> treeNodes = new ArrayList<>();
 }

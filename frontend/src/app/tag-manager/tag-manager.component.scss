@@ -1,0 +1,21 @@
+.tag-manager {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.tag-field {
+  width: 100%;
+
+  input {
+    text-overflow: ellipsis;
+  }
+
+  mat-icon {
+    color: #ccc;
+  }
+
+  button:hover mat-icon {
+    color: #f44336;
+  }
+}

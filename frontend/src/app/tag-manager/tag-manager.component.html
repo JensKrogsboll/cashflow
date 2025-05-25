@@ -1,0 +1,9 @@
+<div class="tag-manager">
+  <mat-form-field appearance="fill" class="tag-field">
+    <mat-label>Tag</mat-label>
+    <input matInput [value]="tag" (input)="onTagInput($event)" [placeholder]="tag ? 'Edit tag' : 'Enter tag'" />
+    <button *ngIf="tag" mat-icon-button matSuffix (click)="clearTag()" aria-label="Clear tag">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+</div>

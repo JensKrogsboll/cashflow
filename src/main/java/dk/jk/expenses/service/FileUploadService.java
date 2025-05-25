@@ -12,7 +12,9 @@ import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PushbackInputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -30,22 +32,21 @@ public class FileUploadService {
     private final TreeNodeRepository treeNodeRepository;
     private final TreeService treeService;
 
-    public void processCsvFile(byte[] fileData) throws Exception {
-        int offset = 0;
-        int length = fileData.length;
-        log.info("offset is {}, length is {}", offset, length);
-        if (length > 3) {
-            String firstThree = new String(Hex.encodeHex(fileData, 0, 3, true));
-            log.info("First three bytes is {}", firstThree);
-            if ("efbbbf".equalsIgnoreCase(firstThree)) {
-                offset = 3;
-                length = fileData.length - offset;
-            }
-        }
-        log.info("offset is {}, length is {}", offset, length);
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new java.io.ByteArrayInputStream(fileData, offset, length), StandardCharsets.UTF_8))) {
+    public void processCsvStream(InputStream inputStream) throws Exception {
+        PushbackInputStream pushbackStream = new PushbackInputStream(inputStream, 3);
+        byte[] bom = new byte[3];
+        int read = pushbackStream.read(bom, 0, bom.length);
 
+        boolean hasBom = read == 3 &&
+                (bom[0] & 0xFF) == 0xEF &&
+                (bom[1] & 0xFF) == 0xBB &&
+                (bom[2] & 0xFF) == 0xBF;
+
+        if (!hasBom && read > 0) {
+            pushbackStream.unread(bom, 0, read);
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(pushbackStream, StandardCharsets.UTF_8))) {
             Iterable<CSVRecord> records = CSVFormat.newFormat(';').builder()
                     .setHeader()
                     .setTrailingDelimiter(true)
@@ -53,31 +54,29 @@ public class FileUploadService {
                     .build()
                     .parse(reader);
 
-            Map<Posting,Integer> postingCounter = new HashMap<>();
-
+            Map<Posting, Integer> postingCounter = new HashMap<>();
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-            StreamSupport.stream(records.spliterator(), false)
-                    .forEach(record -> {
-                        Posting posting = new Posting();
-                        //log.info(record.toString());
-                        posting.setDate(LocalDate.parse(record.get("Bogforingsdato"), dateTimeFormatter));
-                        posting.setText(record.get("Beskrivelse"));
-                        posting.setAmount(new BigDecimal(record.get("Belob").replace(',','.')));
-                        postingCounter.put(posting, postingCounter.getOrDefault(posting, 0) + 1);
-                        posting.setSequenceNumber(postingCounter.get(posting));
 
-                        // Build or find the path in the tree
-                        String[] pathSegments = posting.getText().split("\\s+");
-                        TreeNode finalNode = treeService.buildOrFindPath(pathSegments);
-                        // Optionally, you can track the link between Posting and TreeNode
-                        // if you want that relationship, but it's not strictly required by
-                        // the original spec.
+            for (CSVRecord record : records) {
+                Posting posting = new Posting();
+                posting.setDate(LocalDate.parse(record.get("Bogforingsdato"), dateTimeFormatter));
+                posting.setText(record.get("Beskrivelse"));
+                posting.setAmount(new BigDecimal(record.get("Belob").replace(',', '.')));
 
-                        if (postingRepository.findByDateAndAmountAndTreeNodeAndSequenceNumber(posting.getDate(), posting.getAmount(), finalNode, posting.getSequenceNumber()).isEmpty()) {
-                            posting.setTreeNode(finalNode);
-                            postingRepository.save(posting);
-                        }
-                    });
+                postingCounter.put(posting, postingCounter.getOrDefault(posting, 0) + 1);
+                posting.setSequenceNumber(postingCounter.get(posting));
+
+                String[] pathSegments = posting.getText().split("\\s+");
+                TreeNode finalNode = treeService.buildOrFindPath(pathSegments);
+
+                if (postingRepository.findByDateAndAmountAndTreeNodeAndSequenceNumber(
+                        posting.getDate(), posting.getAmount(), finalNode, posting.getSequenceNumber()).isEmpty()) {
+
+                    posting.setTreeNode(finalNode);
+                    postingRepository.save(posting);
+                }
+            }
         }
     }
+
 }

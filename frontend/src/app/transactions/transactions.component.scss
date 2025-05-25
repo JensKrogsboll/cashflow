@@ -1,0 +1,24 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.example-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table-wrapper {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: block;
+}
+
+.example-table {
+  width: 100%;
+  display: table;
+}

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +42,8 @@ public class TreeService {
                 node = new TreeNode();
                 node.setName(segment);
                 node.setParent(par);
-                treeNodeRepository.save(node);
+                node = treeNodeRepository.save(node);
+                setLabel(node.getId(), "default");
             }
 
             // Now we can reassign 'parent' safely outside the lambda
@@ -81,5 +83,8 @@ public class TreeService {
         treeNodeRepository.save(node);
         return node;
     }
-
+    
+    public List<String> listAllLabels() {
+        return labelRepository.findAll().stream().map(Label::getName).collect(Collectors.toList());
+    }
 }

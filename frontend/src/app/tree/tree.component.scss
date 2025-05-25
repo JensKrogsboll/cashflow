@@ -1,0 +1,51 @@
+.app-tree {
+  display: block;
+
+  ::ng-deep .mat-tree-node {
+    padding: 0.5rem 0;
+    font-size: 14px;
+    color: #e0e0e0;
+
+    .mat-icon {
+      font-size: 20px;
+      color: #90caf9;
+    }
+
+    button {
+      margin-right: 8px;
+    }
+
+
+  }
+
+  ::ng-deep .mat-tree {
+    background-color: transparent;
+  }
+
+  ::ng-deep .mat-progress-bar {
+    margin: 4px 0;
+  }
+
+}
+
+.node-label {
+  color: rgba(37, 26, 26, 0.4);
+  font-style: italic;
+  font-size: 0.85em;
+  margin-left: 0.25rem;
+  cursor: pointer;
+
+  &:hover {
+    color: rgba(210, 30, 30, 0.7);
+    text-decoration: underline;
+  }
+}
+
+.label-editor {
+  margin-left: 0.25rem;
+  width: 150px;
+
+  input {
+    font-size: 0.85em;
+  }
+}
