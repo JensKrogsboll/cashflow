@@ -35,6 +35,13 @@ public class Posting {
     @JsonIgnore
     private TreeNode treeNode;
 
+    @ManyToOne()
+    private Label label;
+
+    public Label getEffectiveLabel() {
+        return label != null ? label : this.getTreeNode().getEffectiveLabel();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

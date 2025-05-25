@@ -34,4 +34,25 @@ public class TreeNode {
 
     @ManyToOne
     private Label label;
+
+    public Label getEffectiveLabel() {
+        return label != null ? label : findLabelNode(this).label;
+    }
+
+    public TreeNode findLabelNode(TreeNode node) {
+        if (node == null) {
+            return this;
+        }
+        if (node.getLabel() != null) {
+            return node;
+        }
+        var parent = node.getParent();
+        if (parent == null) {
+            return node;
+        }
+        if (parent.getLabel() != null) {
+            return parent;
+        }
+        return findLabelNode(parent);
+    }
 }

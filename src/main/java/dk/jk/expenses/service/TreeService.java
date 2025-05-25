@@ -43,7 +43,9 @@ public class TreeService {
                 node.setName(segment);
                 node.setParent(par);
                 node = treeNodeRepository.save(node);
-                setLabel(node.getId(), "default");
+                if (par == null) {
+                    setLabel(node.getId(), "default");
+                }
             }
 
             // Now we can reassign 'parent' safely outside the lambda
@@ -72,7 +74,12 @@ public class TreeService {
             label.setName(labelName);
             labelRepository.save(label);
         }
-        node.setLabel(label);
+        TreeNode labelParent = node.findLabelNode(node.getParent());
+        if (labelParent != node && label.equals(labelParent.getLabel())) {
+            node.setLabel(null);
+        } else {
+            node.setLabel(label);
+        }
         return treeNodeRepository.save(node);
     }
 

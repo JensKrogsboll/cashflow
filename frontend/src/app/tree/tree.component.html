@@ -19,6 +19,7 @@
         type="text"
         [formControl]="node.labelControl"
         [matAutocomplete]="auto"
+        (keydown.enter)="saveLabel(node)"
       />
       <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onLabelSelected(node, $event)">
         <mat-option *ngFor="let option of labelOptions" [value]="option">

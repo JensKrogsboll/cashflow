@@ -36,7 +36,8 @@ export class TreeNode {
   constructor(
     public id: bigint,
     public name: string,
-    public label: Label
+    public label: Label,
+    public effectiveLabel: Label
   ) {}
 }
 
@@ -122,7 +123,10 @@ export class DynamicDataSource implements DataSource<DynamicFlatNode> {
       this._database.getChildren(node.id).pipe(
           tap(() => node.isLoading.set(false))
       ).subscribe(children => {
-        const nodes = children.map(name => new DynamicFlatNode(name.id, name.name, name.label.name, node.level + 1, true));
+        const nodes = children.map(name => {
+          const label = name.effectiveLabel == null ? "" : name.effectiveLabel.name;
+          return new DynamicFlatNode(name.id, name.name, label, node.level + 1, true);
+        });
         this.data.splice(index + 1, 0, ...nodes);
         this.dataChange.next(this.data);
       });
@@ -158,7 +162,10 @@ export class TreeComponent {
 
     // Fetch root nodes from API
     database.getRootNodes().subscribe(rootNodes => {
-      this.dataSource.data = rootNodes.map(name => new DynamicFlatNode(name.id, name.name, name.label.name, 0, true));
+      this.dataSource.data = rootNodes.map(name => {
+        const label = name.effectiveLabel == null ? "" : name.effectiveLabel.name;
+        return new DynamicFlatNode(name.id, name.name, label, 0, true)
+      });
     });
   }
 
@@ -188,6 +195,11 @@ export class TreeComponent {
     const selectedLabel = event.option.value;
     console.log("SELECTED LABEL: " + selectedLabel);
     this.applyLabel(node, selectedLabel);
+  }
+
+  saveLabel(node: any): void {
+    const enteredLabel = node.labelControl.value?.trim();
+    this.applyLabel(node, enteredLabel);
   }
 
   applyLabel(node: any, label: string | null): void {

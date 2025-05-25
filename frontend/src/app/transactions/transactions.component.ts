@@ -19,7 +19,7 @@ export class TransactionsComponent implements AfterViewInit {
   constructor(private selectionService: SelectionService, private http: HttpClient) {
   }
 
-  displayedColumns: string[] = ['date', 'sequenceNumber', 'text', 'amount'];
+  displayedColumns: string[] = ['date', 'sequenceNumber', 'text', 'amount', 'label'];
   exampleDatabase!: ExampleHttpDatabase | null;
   data: GithubApi[] = [];
 
@@ -45,7 +45,8 @@ export interface GithubApi {
   date: string;
   sequenceNumber: number;
   text: string;
-  amount: number
+  amount: number;
+  effectiveLabel: string;
 }
 
 /** An example database that the data source uses to retrieve data for the table. */
