@@ -18,7 +18,10 @@ public class TreeController {
     @GetMapping
     public List<TreeNode> getTree(@RequestParam(name = "parentId", required = false) Long parentId) {
         return treeService.getNodes(parentId).stream()
-                .sorted(Comparator.comparing(TreeNode::getId))
+                .sorted(Comparator.comparing(treeNode -> {
+                    var label = treeNode.getEffectiveLabel().getName();
+                    return label != null ? label + treeNode.getName() : treeNode.getName();
+                }))
                 .toList();
     }
 

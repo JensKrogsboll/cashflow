@@ -17,7 +17,7 @@ public class LabelController {
 
     @GetMapping
     public Collection<String> getLabels() {
-        return treeService.listAllLabels();
+        return treeService.listAllLabels().stream().sorted().toList();
     }
 
 }
