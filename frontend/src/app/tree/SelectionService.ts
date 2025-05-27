@@ -1,17 +1,18 @@
 // selection.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import {DynamicFlatNode} from './DynamicFlatNode';
 
 @Injectable({ providedIn: 'root' })
 export class SelectionService {
-  private selectedNodeIdSubject = new BehaviorSubject<string | null>(null);
-  selectedNodeId$ = this.selectedNodeIdSubject.asObservable();
+  private selectedNodeSubject = new BehaviorSubject<DynamicFlatNode | null>(null);
+  selectedNode$ = this.selectedNodeSubject.asObservable();
 
-  selectNode(id: bigint) {
-    this.selectedNodeIdSubject.next("" + id);
+  selectNode(node: DynamicFlatNode) {
+    this.selectedNodeSubject.next(node);
   }
 
-  getSelectedNodeId(): string | null {
-    return this.selectedNodeIdSubject.getValue();
+  getSelectedNode(): DynamicFlatNode | null {
+    return this.selectedNodeSubject.getValue();
   }
 }

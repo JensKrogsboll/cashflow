@@ -14,18 +14,7 @@ import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
-
-/** Flat node with expandable and level information */
-export class DynamicFlatNode {
-  constructor(
-      public id: bigint,
-      public item: string,
-      public label: string,
-      public level = 1,
-      public expandable = false,
-      public isLoading = signal(false),
-  ) {}
-}
+import {DynamicFlatNode} from './DynamicFlatNode';
 
 export class Label {
   constructor(public id: bigint, public name: string) {
@@ -57,8 +46,12 @@ export class DynamicDatabase {
   }
 
   /** Fetch child nodes */
-  getChildren(node: bigint): Observable<TreeNode[]> {
-    return this.http.get<TreeNode[]>(`${this.apiUrl}?parentId=${node}`);
+  getChildren(node: DynamicFlatNode): Observable<TreeNode[]> {
+    console.log(node);
+    if (node.id) {
+      return this.http.get<TreeNode[]>(`${this.apiUrl}?parentId=${node.id}`);
+    }
+    return this.http.get<TreeNode[]>(`${this.apiUrl}?label=${node.item}`);
   }
 
   /** Check if node is expandable */
@@ -120,7 +113,7 @@ export class DynamicDataSource implements DataSource<DynamicFlatNode> {
     node.isLoading.set(true);
 
     if (expand) {
-      this._database.getChildren(node.id).pipe(
+      this._database.getChildren(node).pipe(
           tap(() => node.isLoading.set(false))
       ).subscribe(children => {
         const nodes = children.map(name => {
@@ -130,14 +123,14 @@ export class DynamicDataSource implements DataSource<DynamicFlatNode> {
         this.data.splice(index + 1, 0, ...nodes);
         this.dataChange.next(this.data);
       });
-      this.selectionService.selectNode(node.id);
+      this.selectionService.selectNode(node);
     } else {
       let count = 0;
       for (let i = index + 1; i < this.data.length && this.data[i].level > node.level; i++, count++) {}
       this.data.splice(index + 1, count);
       this.dataChange.next(this.data);
       node.isLoading.set(false);
-      this.selectionService.selectNode(node.id);
+      this.selectionService.selectNode(node);
     }
   }
 }
@@ -166,6 +159,7 @@ export class TreeComponent {
         const label = name.effectiveLabel == null ? "" : name.effectiveLabel.name;
         return new DynamicFlatNode(name.id, name.name, label, 0, true)
       });
+      selectionService.selectNode(this.dataSource.data[0]);
     });
   }
 
@@ -210,7 +204,13 @@ export class TreeComponent {
 
     const encoded = encodeURIComponent(label);
     this.http.post(`/api/tree/${node.id}/label/${encoded}`, {}).subscribe({
-      next: () => console.log(`Label "${label}" applied to node ${node.id}`),
+      next: () => {
+        console.log(`Label "${label}" applied to node ${node.id}`)
+      },
+      complete: () => {
+        console.log("COMPLETE");
+        this.selectionService.selectNode(node);
+      },
       error: (err) => console.error(`Failed to set label:`, err)
     });
   }

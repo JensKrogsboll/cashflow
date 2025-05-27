@@ -5,11 +5,12 @@ import {MatSidenavModule} from '@angular/material/sidenav';
 import {TransactionsComponent} from '../transactions/transactions.component';
 import {TagManagerComponent} from '../tag-manager/tag-manager.component';
 import {MatTabsModule} from '@angular/material/tabs';
+import {ExpensesComponent} from '../expenses/expenses.component';
 
 @Component({
   selector: 'app-main',
     imports: [
-        TreeComponent, TransactionsComponent, MatButtonModule, MatSidenavModule, MatTabsModule
+        TreeComponent, TransactionsComponent, MatButtonModule, MatSidenavModule, MatTabsModule, ExpensesComponent
     ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'

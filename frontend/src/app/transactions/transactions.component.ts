@@ -4,6 +4,7 @@ import {Observable} from 'rxjs';
 import {MatTableModule} from '@angular/material/table';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {SelectionService} from '../tree/SelectionService';
+import {DynamicFlatNode} from '../tree/DynamicFlatNode';
 
 /**
  * @title Table retrieving data through HTTP
@@ -28,9 +29,9 @@ export class TransactionsComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.exampleDatabase = new ExampleHttpDatabase(this.http);
-    this.selectionService.selectedNodeId$.subscribe(nodeId => {
-      if (nodeId) {
-        this.exampleDatabase!.getRepoIssues(nodeId)
+    this.selectionService.selectedNode$.subscribe(node => {
+      if (node) {
+        this.exampleDatabase!.getRepoIssues(node)
           .subscribe(data => {
             this.data = data;
             this.isLoadingResults = false;
@@ -53,9 +54,9 @@ export interface GithubApi {
 export class ExampleHttpDatabase {
   constructor(private _httpClient: HttpClient) {}
 
-  getRepoIssues(treeNodeId: string): Observable<GithubApi[]> {
+  getRepoIssues(treeNode: DynamicFlatNode): Observable<GithubApi[]> {
     const href = '/api/posting';
-    const requestUrl = `${href}?treeNodeId=${treeNodeId}`;
+    const requestUrl = treeNode.id ? `${href}?treeNodeId=${treeNode.id}` : `${href}?label=${treeNode.item}`;
 
     return this._httpClient.get<GithubApi[]>(requestUrl);
   }

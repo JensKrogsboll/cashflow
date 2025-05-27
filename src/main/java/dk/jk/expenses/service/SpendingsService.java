@@ -8,6 +8,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
@@ -44,26 +45,26 @@ public class SpendingsService {
                 .filter(p -> !p.getDate().isBefore(fromDate) && !p.getDate().isAfter(toDate))
                 .toList();
 
+        // 1. Group by category and then by YearMonth
         var result = postings.stream()
                 .collect(
-                        Collectors.groupingBy(p ->
-                                        p.getEffectiveLabel().getName(),
+                        Collectors.groupingBy(p -> p.getEffectiveLabel().getName(),
                                 TreeMap::new,
                                 Collectors.groupingBy(
                                         p -> YearMonth.from(p.getDate()),
-                                        TreeMap::new, // inner: TreeMap<Month, BigDecimal>
+                                        TreeMap::new,
                                         Collectors.reducing(BigDecimal.ZERO, Posting::getAmount, BigDecimal::add)
                                 )
                         )
                 );
 
-        // Step 2: Collect all unique YearMonths
+        // 2. Collect all unique YearMonths
         Set<YearMonth> allMonths = postings.stream()
                 .map(p -> YearMonth.from(p.getDate()))
-                .collect(Collectors.toCollection(TreeSet::new)); // ordered set
+                .collect(Collectors.toCollection(TreeSet::new)); // sorted
 
-        // Step 3: Fill in missing months
-        return result.entrySet().stream()
+        // 3. Fill in missing months with null
+        var filledResult = result.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> {
@@ -75,7 +76,43 @@ public class SpendingsService {
                             return filled;
                         },
                         (a, b) -> b,
-                        TreeMap::new
+                        LinkedHashMap::new
                 ));
+
+        // 4. Add synthetic month YearMonth.of(9999, 12) with monthly averages per category
+        YearMonth syntheticMonth = YearMonth.of(9999, 12);
+        for (var entry : filledResult.entrySet()) {
+            var values = entry.getValue().values().stream().toList();
+
+            BigDecimal average = values.isEmpty()
+                    ? null
+                    : values.stream().filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .divide(BigDecimal.valueOf(values.size()), RoundingMode.HALF_UP);
+
+            entry.getValue().put(syntheticMonth, average);
+        }
+
+        // 5. Build "Total" and "Average" categories
+        Map<YearMonth, BigDecimal> totalMap = new TreeMap<>();
+
+        Set<YearMonth> allWithSynthetic = new TreeSet<>(allMonths);
+        allWithSynthetic.add(syntheticMonth);
+
+        for (YearMonth ym : allWithSynthetic) {
+            var values = filledResult.values().stream()
+                    .map(m -> m.get(ym))
+                    .toList();
+
+            BigDecimal sum = values.stream()
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            totalMap.put(ym, sum);
+        }
+
+        filledResult.put("Total", totalMap);
+
+        return filledResult;
     }
+
 }
