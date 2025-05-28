@@ -32,25 +32,26 @@ public class TreeController {
     private List<TreeNode> getTreeNodes(String label) {
         return treeService.getFullTree().stream()
                 .filter(n -> n.getLabel() != null && label.equals(n.getLabel().getName()))
-                .sorted(Comparator.comparing(TreeNode::getName))
+                .sorted(Comparator.comparing(TreeNode::getSum))
                 .toList();
     }
 
     private List<TreeNode> getTreeNodes(Long parentId) {
-        var rootNodes = treeService.getNodes(parentId).stream()
-                .sorted(Comparator.comparing(treeNode -> {
-                    var label = treeNode.getEffectiveLabel().getName();
-                    return label != null ? label + treeNode.getName() : treeNode.getName();
-                }));
-        if (parentId == null) {
-            var labelNodes = labelRepository.findAll().stream()
-                    .sorted(Comparator.comparing(Label::getName))
-                    .map(label -> TreeNode.builder().name(label.getName()).build());
-            return Stream.concat(labelNodes, rootNodes
-                    .filter(n -> n.getLabel() == null || "default".equals(n.getLabel().getName()))
-            ).toList();
+        if (parentId != null) {
+            return treeService.getNodes(parentId).stream()
+                    .sorted(Comparator.comparing(treeNode -> {
+                        var label = treeNode.getEffectiveLabel().getName();
+                        return label != null ? label + treeNode.getName() : treeNode.getName();
+                    }))
+                    .toList();
         }
-        return rootNodes.toList();
+        else {
+            return labelRepository.findAll().stream()
+                    .filter(l -> !l.getTreeNodes().isEmpty())
+                    .sorted(Comparator.comparing(Label::getName))
+                    .map(label -> TreeNode.builder().name(label.getName()).build())
+                    .toList();
+        }
     }
 
     @PostMapping("/{nodeId}/label/{label}")

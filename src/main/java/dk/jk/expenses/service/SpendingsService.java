@@ -109,10 +109,21 @@ public class SpendingsService {
 
             totalMap.put(ym, sum);
         }
+        var sortedResult = filledResult.entrySet().stream()
+                .sorted((o1, o2) ->
+                        o1.getValue().values().stream().reduce((v1, v2) -> v2).get().compareTo(
+                                o2.getValue().values().stream().reduce((v1, v2) -> v2).get()
+                        ))
+                .collect(Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> e.getValue(),
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new)
+                );
 
-        filledResult.put("Total", totalMap);
+        sortedResult.put("Total", totalMap);
 
-        return filledResult;
+        return sortedResult;
     }
 
 }

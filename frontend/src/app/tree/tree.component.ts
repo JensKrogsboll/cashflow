@@ -26,7 +26,8 @@ export class TreeNode {
     public id: bigint,
     public name: string,
     public label: Label,
-    public effectiveLabel: Label
+    public effectiveLabel: Label,
+    public sum:  number
   ) {}
 }
 
@@ -118,7 +119,7 @@ export class DynamicDataSource implements DataSource<DynamicFlatNode> {
       ).subscribe(children => {
         const nodes = children.map(name => {
           const label = name.effectiveLabel == null ? "" : name.effectiveLabel.name;
-          return new DynamicFlatNode(name.id, name.name, label, node.level + 1, true);
+          return new DynamicFlatNode(name.id, name.name, label + ", " + name.sum, node.level + 1, true);
         });
         this.data.splice(index + 1, 0, ...nodes);
         this.dataChange.next(this.data);

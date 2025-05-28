@@ -3,9 +3,13 @@ package dk.jk.expenses.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.antlr.v4.runtime.tree.Tree;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 @Getter
@@ -37,6 +41,21 @@ public class TreeNode {
     @ManyToOne
     private Label label;
 
+    public String getPath() {
+        return getPath(this);
+    }
+
+    private String getPath(TreeNode node) {
+        return "/" + getPathAsStream(node).map(TreeNode::getName).collect(Collectors.joining("/"));
+    }
+
+    private Stream<TreeNode> getPathAsStream(TreeNode node) {
+        if (node.getParent() == null) {
+            return Stream.of(node);
+        }
+        return Stream.concat(getPathAsStream(node.getParent()), Stream.of(node));
+    }
+
     public Label getEffectiveLabel() {
         return label != null ? label : findLabelNode(this).label;
     }
@@ -56,5 +75,18 @@ public class TreeNode {
             return parent;
         }
         return findLabelNode(parent);
+    }
+
+    public BigDecimal getSum() {
+        var children = getChildren();
+        if (children == null) {
+            return BigDecimal.ZERO;
+        }
+        return this.getChildren().stream()
+                .filter(t -> t.getEffectiveLabel() != null && t.getEffectiveLabel().equals(this.getEffectiveLabel()))
+                .map(TreeNode::getSum)
+                .reduce(this.getPostings().stream()
+                        .map(Posting::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add), BigDecimal::add);
     }
 }

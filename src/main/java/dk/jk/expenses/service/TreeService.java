@@ -6,14 +6,17 @@ import dk.jk.expenses.repository.LabelRepository;
 import dk.jk.expenses.repository.TreeNodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TreeService {
 
     private final TreeNodeRepository treeNodeRepository;
@@ -44,7 +47,7 @@ public class TreeService {
                 node.setParent(par);
                 node = treeNodeRepository.save(node);
                 if (par == null) {
-                    setLabel(node.getId(), "default");
+                    setLabel(node.getId(), "Diverse");
                 }
             }
 
@@ -93,5 +96,11 @@ public class TreeService {
     
     public List<String> listAllLabels() {
         return labelRepository.findAll().stream().map(Label::getName).collect(Collectors.toList());
+    }
+
+    public void updateLabelsFromMap(Map<String, String> map) {
+        treeNodeRepository.findAll().stream()
+                .filter(n -> map.containsKey(n.getPath()))
+                .forEach(n -> setLabel(n.getId(), map.get(n.getPath())));
     }
 }
