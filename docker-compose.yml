@@ -9,7 +9,9 @@ services:
       - expenses-app
 
   expenses-app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: expenses-app
     ports:
       - "8082:8080"

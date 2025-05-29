@@ -33,10 +33,10 @@ public class TreeNode {
 
     @OneToMany(mappedBy = "parent")
     @JsonIgnore
-    private List<TreeNode> children = new ArrayList<>();
+    private List<TreeNode> children;
 
     @OneToMany(mappedBy = "treeNode")
-    private List<Posting> postings = new ArrayList<>();
+    private List<Posting> postings;
 
     @ManyToOne
     private Label label;
