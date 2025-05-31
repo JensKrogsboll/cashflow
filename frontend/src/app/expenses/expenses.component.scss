@@ -9,7 +9,7 @@
 
 .expenses-table {
   width: max-content;
-  min-width: max-content;
+  min-width: 100%;
   overflow-x: auto;
 }
 
@@ -40,7 +40,13 @@ mat-header-cell:first-child {
 
 .negative {
   color: #d32f2f;
-  background: seashell;
   font-weight: 500;
 }
 
+.mat-mdc-row:nth-child(even){
+  background-color: white;
+}
+
+.mat-mdc-row:nth-child(odd){
+  background-color: #f0f1f4;
+}
