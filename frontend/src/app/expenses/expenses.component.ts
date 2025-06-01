@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {MatTableModule} from '@angular/material/table';
 import {SelectionService} from '../tree/SelectionService';
 import {HttpClient} from '@angular/common/http';
@@ -15,12 +15,16 @@ import {NgClass, NgFor} from '@angular/common';
 })
 export class ExpensesComponent implements AfterViewInit {
 
+  @ViewChildren('categoryRow', { read: ElementRef }) rows!: QueryList<ElementRef>;
+
   constructor(private selectionService: SelectionService, private http: HttpClient) {
   }
 
   months: string[] = [];
   categories: string[] = [];
   displayedColumns: string[] = [];
+  flashCategory: string | null = null;
+  highlightedCategory: string | null = null;
 
   edb!: ExpensesHttpDatabase | null;
   data: ExpenseData = {};
@@ -41,9 +45,23 @@ export class ExpensesComponent implements AfterViewInit {
             this.months = Array.from(allMonths).sort();
             this.displayedColumns = ['category', ...this.months];
           });
+        // Scroll after a slight delay to allow DOM update
+        setTimeout(() => {
+          const el = this.rows.find(ref =>
+            ref.nativeElement.getAttribute('data-category') === node.item
+          );
+          el?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          this.flashCategory = node.effectiveLabel ? node.effectiveLabel : node.item;
+          setTimeout(() => this.flashCategory = null, 3000); // clear after animation
+        }, 10);
+        this.highlightedCategory = node.effectiveLabel ? node.effectiveLabel : node.item;
       }
     });
 
+  }
+
+  shouldFlash(category: string): boolean {
+    return this.flashCategory === category;
   }
 
   getValue(category: string, month: string): string {
@@ -66,6 +84,9 @@ export class ExpensesComponent implements AfterViewInit {
   }
 
 
+  shouldHighlight(category : string): boolean {
+    return this.highlightedCategory === category;
+  }
 }
 
 export interface ExpenseData {

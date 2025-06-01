@@ -119,7 +119,7 @@ export class DynamicDataSource implements DataSource<DynamicFlatNode> {
       ).subscribe(children => {
         const nodes = children.map(name => {
           const label = name.effectiveLabel == null ? "" : name.effectiveLabel.name;
-          return new DynamicFlatNode(name.id, name.name, label + ", " + name.sum, node.level + 1, true);
+          return new DynamicFlatNode(name.id, name.name, label + ", " + name.sum, name.effectiveLabel.name, node.level + 1, true);
         });
         this.data.splice(index + 1, 0, ...nodes);
         this.dataChange.next(this.data);
@@ -158,7 +158,7 @@ export class TreeComponent {
     database.getRootNodes().subscribe(rootNodes => {
       this.dataSource.data = rootNodes.map(name => {
         const label = name.effectiveLabel == null ? "" : name.effectiveLabel.name;
-        return new DynamicFlatNode(name.id, name.name, label, 0, true)
+        return new DynamicFlatNode(name.id, name.name, label, name.effectiveLabel?.name, 0, true)
       });
       selectionService.selectNode(this.dataSource.data[0]);
     });
@@ -188,7 +188,6 @@ export class TreeComponent {
 
   onLabelSelected(node: any, event: MatAutocompleteSelectedEvent): void {
     const selectedLabel = event.option.value;
-    console.log("SELECTED LABEL: " + selectedLabel);
     this.applyLabel(node, selectedLabel);
   }
 
@@ -216,4 +215,7 @@ export class TreeComponent {
     });
   }
 
+  onNodeClick(node :any) {
+    this.selectionService.selectNode(node);
+  }
 }

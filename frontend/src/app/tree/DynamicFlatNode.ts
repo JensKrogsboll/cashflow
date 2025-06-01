@@ -6,6 +6,7 @@ export class DynamicFlatNode {
     public id: bigint,
     public item: string,
     public label: string,
+    public effectiveLabel: string,
     public level = 1,
     public expandable = false,
     public isLoading = signal(false),
